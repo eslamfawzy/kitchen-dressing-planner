@@ -107,7 +107,8 @@ export interface Window {
 }
 
 /** Kitchen / dressing unit finishes beyond the door colour (see cabinetFinishes.ts). */
-export interface CabinetFinish { top?: string; handle?: string; }
+/** `doors`: doors per row (1–4); absent = automatic. `open`: doors swung open in 3D. */
+export interface CabinetFinish { top?: string; handle?: string; doors?: number; open?: boolean; }
 
 export interface FurnitureItem {
   /** Project-owned model; catalogId remains a portable procedural fallback. */

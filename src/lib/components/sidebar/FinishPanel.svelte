@@ -7,14 +7,14 @@
 
   const ar = (get(locale) as string) === 'ar';
   const dict = {
-    en: { title: 'Finishes', doors: 'Doors', top: 'Worktop', handle: 'Handles', hint: 'Applies to the selected units, or all units if none is selected.', done: 'Applied to' },
-    ar: { title: 'الخامات', doors: 'الأبواب', top: 'سطح الشغل', handle: 'المقابض', hint: 'بتتطبق على الوحدات المحددة، أو على كل الوحدات لو مفيش تحديد.', done: 'اتطبقت على' },
+    en: { title: 'Finishes', doors: 'Doors', top: 'Worktop', handle: 'Handles', doorCtl: 'Door control', count: 'Doors per row', auto: 'Auto', openAll: 'Open doors', closeAll: 'Close doors', hint: 'Applies to the selected units, or all units if none is selected.', done: 'Applied to' },
+    ar: { title: 'الخامات', doors: 'الأبواب', top: 'سطح الشغل', handle: 'المقابض', doorCtl: 'التحكم في الدرف', count: 'عدد الدرف', auto: 'تلقائي', openAll: 'افتح الدرف', closeAll: 'اقفل الدرف', hint: 'بتتطبق على الوحدات المحددة، أو على كل الوحدات لو مفيش تحديد.', done: 'اتطبقت على' },
   };
   const tr = ar ? dict.ar : dict.en;
-  let open = $state(false);
+  let open = $state(true);
   let status = $state('');
 
-  function apply(choice: { door?: string; top?: string; handle?: string }) {
+  function apply(choice: { door?: string; top?: string; handle?: string; doors?: number; open?: boolean }) {
     const n = applyFinish(choice, get(selectedElementIds));
     status = n ? `${tr.done} ${n}` : '';
   }
@@ -26,6 +26,17 @@
   </button>
   {#if open}
     <div class="px-3 pb-3 space-y-2 text-[11px] text-gray-500">
+      <div class="font-semibold text-gray-700">{tr.doorCtl}</div>
+      <div class="flex flex-wrap gap-1 items-center">
+        <span>{tr.count}</span>
+        {#each [0, 1, 2, 3, 4] as n}
+          <button class="min-w-7 px-2 py-1 rounded-full bg-gray-100 hover:bg-blue-100" onclick={() => apply({ doors: n })}>{n === 0 ? tr.auto : n}</button>
+        {/each}
+      </div>
+      <div class="flex gap-1">
+        <button class="flex-1 px-2 py-1.5 rounded-lg bg-blue-600 text-white font-semibold" onclick={() => apply({ open: true })}>{tr.openAll}</button>
+        <button class="flex-1 px-2 py-1.5 rounded-lg bg-gray-200 text-gray-700 font-semibold" onclick={() => apply({ open: false })}>{tr.closeAll}</button>
+      </div>
       <div>{tr.doors}</div>
       <div class="flex flex-wrap gap-1.5">
         {#each doorFinishes as f}

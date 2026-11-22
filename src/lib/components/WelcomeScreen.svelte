@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { createStarterProject } from '$lib/utils/starterProject';
   import { t } from '$lib/i18n';
   import { templateLabels } from '$lib/i18n/templateLabels';
   import { onDestroy } from 'svelte';
@@ -44,7 +45,7 @@
     } catch (error) { importError = error instanceof Error ? error.message : $t('welcome.projectFailed'); }
   }
 
-  function startFromScratch() { return createProject(() => createDefaultProject('Untitled Project')); }
+  function startFromScratch() { return createProject(() => createStarterProject()); }
   function useHouseTemplate(index: number) { return createProject(houseTemplates[index].create); }
 
   let showTemplates = $state(false);

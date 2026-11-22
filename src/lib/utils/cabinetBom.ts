@@ -80,6 +80,7 @@ export function computeBom(items: readonly FurnitureItem[]): Bom {
     unitCount += 1;
     const size = getFurnitureSize(it);
     const spec = unitSpec(def.kind, size.width);
+    if (spec.doors > 0 && it.finish?.doors) spec.doors = it.finish.doors;
     const label = def.name.replace(/\s+\d+$/, '');
     if (spec.readymade) { ready.set(def.name, (ready.get(def.name) ?? 0) + 1); continue; }
     const arm = CORNER_ARM_CM[def.kind];

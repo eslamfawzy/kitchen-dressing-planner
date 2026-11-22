@@ -23,7 +23,7 @@ function box(group: THREE.Group, w: number, h: number, d: number, x: number, y: 
   return mesh;
 }
 
-interface Palette { noHandles: boolean; body: THREE.Material; front: THREE.Material; top: THREE.Material; handle: THREE.Material; plinth: THREE.Material; dark: THREE.Material; }
+interface Palette { noHandles: boolean; doors?: number; open: boolean; body: THREE.Material; front: THREE.Material; top: THREE.Material; handle: THREE.Material; plinth: THREE.Material; dark: THREE.Material; }
 
 function palette(color: string, dressing: boolean, finish?: CabinetFinish): Palette {
   const base = new THREE.Color(color);
@@ -36,6 +36,8 @@ function palette(color: string, dressing: boolean, finish?: CabinetFinish): Pale
     body: mat(body, 0.8), front: mat(base, 0.55), top: dressing ? mat(top, 0.35, 0.1) : mat(top, topDef.roughness, topDef.metalness),
     handle: mat(handleColor, 0.3, handleDef.id === 'none' ? 0.05 : 0.8), plinth: mat('#2b2b2b', 0.9), dark: mat('#1a1a1a', 0.4, 0.6),
     noHandles: handleDef.id === 'none',
+    doors: finish?.doors && finish.doors > 0 ? Math.min(4, Math.floor(finish.doors)) : undefined,
+    open: !!finish?.open,
   };
 }
 
@@ -54,11 +56,19 @@ function front(g: THREE.Group, p: Palette, cx: number, y: number, fw: number, fh
 }
 
 function doorsAcross(g: THREE.Group, p: Palette, w: number, y: number, fh: number, zFace: number, maxDoor = 60): void {
-  const n = Math.max(1, Math.ceil(w / maxDoor));
+  const n = p.doors ?? Math.max(1, Math.ceil(w / maxDoor));
   const fw = w / n;
   for (let i = 0; i < n; i++) {
     const cx = -w / 2 + fw * (i + 0.5);
-    front(g, p, cx, y, fw, fh, zFace, 'v', i % 2 === 0 ? 'r' : 'l');
+    const hingeLeft = i % 2 === 0; // matches the handle side: handles on the right => hinge on the left
+    if (!p.open) { front(g, p, cx, y, fw, fh, zFace, 'v', hingeLeft ? 'r' : 'l'); continue; }
+    // Open: swing the door about its hinge edge, outward (+Z).
+    const hingeX = cx + (hingeLeft ? -fw / 2 : fw / 2);
+    const pivot = new THREE.Group();
+    pivot.position.set(hingeX, 0, 0);
+    front(pivot, p, cx - hingeX, y, fw, fh, zFace, 'v', hingeLeft ? 'r' : 'l');
+    pivot.rotation.y = (hingeLeft ? -1 : 1) * (100 * Math.PI) / 180;
+    g.add(pivot);
   }
 }
 
