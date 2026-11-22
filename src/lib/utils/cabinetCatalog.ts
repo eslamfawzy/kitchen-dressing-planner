@@ -23,7 +23,7 @@ function box(group: THREE.Group, w: number, h: number, d: number, x: number, y: 
   return mesh;
 }
 
-interface Palette { noHandles: boolean; doors?: number; open: boolean; body: THREE.Material; front: THREE.Material; top: THREE.Material; handle: THREE.Material; plinth: THREE.Material; dark: THREE.Material; }
+interface Palette { noHandles: boolean; doors?: number; open: boolean; led: THREE.Material | null; body: THREE.Material; front: THREE.Material; top: THREE.Material; handle: THREE.Material; plinth: THREE.Material; dark: THREE.Material; }
 
 function palette(color: string, dressing: boolean, finish?: CabinetFinish): Palette {
   const base = new THREE.Color(color);
@@ -38,6 +38,7 @@ function palette(color: string, dressing: boolean, finish?: CabinetFinish): Pale
     noHandles: handleDef.id === 'none',
     doors: finish?.doors && finish.doors > 0 ? Math.min(4, Math.floor(finish.doors)) : undefined,
     open: !!finish?.open,
+    led: finish?.led ? new THREE.MeshStandardMaterial({ color: '#fff6d8', emissive: '#ffe9a8', emissiveIntensity: 1.6, roughness: 0.4 }) : null,
   };
 }
 
@@ -175,6 +176,7 @@ export function createCabinetModel(def: CabinetDef & { finish?: CabinetFinish })
     case 'wall': {
       box(g, w, h, d, 0, 0, 0, p.body);
       doorsAcross(g, p, w, 0, h, d / 2, 50);
+      if (p.led) box(g, w - 4, 0.8, 1.4, 0, -0.5, d / 2 - 5, p.led);
       break;
     }
     case 'wall_corner': {
@@ -196,6 +198,37 @@ export function createCabinetModel(def: CabinetDef & { finish?: CabinetFinish })
       const lowH = c.frontH * 0.62;
       doorsAcross(g, p, w, c.y0, lowH, c.zFace);
       doorsAcross(g, p, w, c.y0 + lowH, c.frontH - lowH, c.zFace);
+      break;
+    }
+    case 'dishwasher': {
+      const c = baseCarcass(g, p, w, d, h);
+      box(g, w - GAP, c.frontH - GAP, 1.8, 0, c.y0 + GAP / 2, c.zFace + 0.9, mat('#d8dce1', 0.35, 0.6));
+      box(g, w - 6, 5, 0.6, 0, c.y0 + c.frontH - 8, c.zFace + 2, p.dark);
+      box(g, w * 0.6, 1.2, 1.6, 0, c.y0 + c.frontH - 12, c.zFace + 2.6, mat('#9aa0a6', 0.3, 0.8));
+      break;
+    }
+    case 'washer': {
+      const c = baseCarcass(g, p, w, d, h);
+      box(g, w - GAP, c.frontH - GAP, 1.8, 0, c.y0 + GAP / 2, c.zFace + 0.9, mat('#f2f2f2', 0.4, 0.2));
+      const door = new THREE.Mesh(new THREE.CylinderGeometry(Math.min(w * 0.36, 22), Math.min(w * 0.36, 22), 1.2, 32), mat('#2b3a46', 0.15, 0.4));
+      door.rotation.x = Math.PI / 2; door.position.set(0, c.y0 + c.frontH * 0.45, c.zFace + 2);
+      g.add(door);
+      box(g, w - 10, 4, 0.6, 0, c.y0 + c.frontH - 8, c.zFace + 2, p.dark);
+      break;
+    }
+    case 'oven_base': {
+      const c = baseCarcass(g, p, w, d, h);
+      const ovenH = 60;
+      box(g, w - GAP, ovenH, 1.8, 0, c.y0 + c.frontH - ovenH, c.zFace + 0.9, p.dark);
+      box(g, w - 12, 1.5, 2, 0, c.y0 + c.frontH - 6, c.zFace + 2.4, mat('#9aa0a6', 0.3, 0.8));
+      box(g, w - 14, ovenH - 22, 0.6, 0, c.y0 + c.frontH - ovenH + 4, c.zFace + 1.9, mat('#10151a', 0.1, 0.5));
+      front(g, p, 0, c.y0, w, c.frontH - ovenH, c.zFace, 'h');
+      break;
+    }
+    case 'microwave': {
+      box(g, w, h, d - 2, 0, 0, -1, mat('#c9ccd1', 0.3, 0.7));
+      box(g, w * 0.68, h - 8, 1, -w * 0.12, 4, d / 2 - 1.5, mat('#10151a', 0.1, 0.5));
+      box(g, w * 0.16, h - 12, 1, w * 0.36, 6, d / 2 - 1.5, p.dark);
       break;
     }
     case 'tall_oven': {
@@ -223,6 +256,7 @@ export function createCabinetModel(def: CabinetDef & { finish?: CabinetFinish })
     // ── Dressing room ──────────────────────────────────────────────────
     case 'hang': {
       box(g, w, h, d - 2, 0, 0, -1, p.body);
+      if (p.led) box(g, w - 6, 0.8, 1.2, 0, h - 4, d / 2 - 4, p.led);
       doorsAcross(g, p, w, PLINTH, h - PLINTH, d / 2 - 1, 60);
       break;
     }
@@ -232,7 +266,10 @@ export function createCabinetModel(def: CabinetDef & { finish?: CabinetFinish })
       box(g, 2, h, d, w / 2 - 1, 0, 0, p.front);
       box(g, w, h, 1, 0, 0, -d / 2 + 0.5, p.body);
       const n = 7;
-      for (let i = 0; i <= n; i++) box(g, w - 4, 2, d - 2, 0, (h - 2) * (i / n), 0, p.front);
+      for (let i = 0; i <= n; i++) {
+        box(g, w - 4, 2, d - 2, 0, (h - 2) * (i / n), 0, p.front);
+        if (p.led && i > 0) box(g, w - 8, 0.6, 1, 0, (h - 2) * (i / n) - 0.5, d / 2 - 4, p.led);
+      }
       break;
     }
     case 'dress_drawers': {

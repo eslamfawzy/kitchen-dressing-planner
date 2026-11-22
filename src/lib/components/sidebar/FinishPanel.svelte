@@ -4,17 +4,18 @@
   import { selectedElementIds } from '$lib/stores/project';
   import { doorFinishes, topFinishes, handleFinishes } from '$lib/utils/cabinetFinishes';
   import { applyFinish } from '$lib/utils/cabinetPlacement';
+  import { cabinetStyles } from '$lib/utils/cabinetStyles';
 
   const ar = (get(locale) as string) === 'ar';
   const dict = {
-    en: { title: 'Finishes', doors: 'Doors', top: 'Worktop', handle: 'Handles', doorCtl: 'Door control', count: 'Doors per row', auto: 'Auto', openAll: 'Open doors', closeAll: 'Close doors', hint: 'Applies to the selected units, or all units if none is selected.', done: 'Applied to' },
-    ar: { title: 'الخامات', doors: 'الأبواب', top: 'سطح الشغل', handle: 'المقابض', doorCtl: 'التحكم في الدرف', count: 'عدد الدرف', auto: 'تلقائي', openAll: 'افتح الدرف', closeAll: 'اقفل الدرف', hint: 'بتتطبق على الوحدات المحددة، أو على كل الوحدات لو مفيش تحديد.', done: 'اتطبقت على' },
+    en: { title: 'Finishes', doors: 'Doors', top: 'Worktop', handle: 'Handles', doorCtl: 'Door control', count: 'Doors per row', auto: 'Auto', openAll: 'Open doors', closeAll: 'Close doors', styles: 'Ready styles', led: 'LED lighting', ledOn: 'On', ledOff: 'Off', hint: 'Applies to the selected units, or all units if none is selected.', done: 'Applied to' },
+    ar: { title: 'الخامات', doors: 'الأبواب', top: 'سطح الشغل', handle: 'المقابض', doorCtl: 'التحكم في الدرف', count: 'عدد الدرف', auto: 'تلقائي', openAll: 'افتح الدرف', closeAll: 'اقفل الدرف', styles: 'ستايلات جاهزة', led: 'إضاءة LED', ledOn: 'شغّل', ledOff: 'اطفي', hint: 'بتتطبق على الوحدات المحددة، أو على كل الوحدات لو مفيش تحديد.', done: 'اتطبقت على' },
   };
   const tr = ar ? dict.ar : dict.en;
   let open = $state(true);
   let status = $state('');
 
-  function apply(choice: { door?: string; top?: string; handle?: string; doors?: number; open?: boolean }) {
+  function apply(choice: { door?: string; top?: string; handle?: string; doors?: number; open?: boolean; led?: boolean }) {
     const n = applyFinish(choice, get(selectedElementIds));
     status = n ? `${tr.done} ${n}` : '';
   }
@@ -26,7 +27,15 @@
   </button>
   {#if open}
     <div class="px-3 pb-3 space-y-2 text-[11px] text-gray-500">
-      <div class="font-semibold text-gray-700">{tr.doorCtl}</div>
+      <div class="font-semibold text-gray-700">{tr.styles}</div>
+      <div class="flex flex-wrap gap-1">
+        {#each cabinetStyles as s}
+          <button class="px-2 py-1 rounded-full bg-gray-100 hover:bg-amber-100 flex items-center gap-1" onclick={() => apply({ door: s.door, top: s.top, handle: s.handle })}>
+            <span class="inline-block w-3 h-3 rounded-full border border-gray-300" style={`background:${s.door}`}></span>{ar ? s.ar : s.en}
+          </button>
+        {/each}
+      </div>
+      <div class="font-semibold text-gray-700 pt-1">{tr.doorCtl}</div>
       <div class="flex flex-wrap gap-1 items-center">
         <span>{tr.count}</span>
         {#each [0, 1, 2, 3, 4] as n}
@@ -36,6 +45,11 @@
       <div class="flex gap-1">
         <button class="flex-1 px-2 py-1.5 rounded-lg bg-blue-600 text-white font-semibold" onclick={() => apply({ open: true })}>{tr.openAll}</button>
         <button class="flex-1 px-2 py-1.5 rounded-lg bg-gray-200 text-gray-700 font-semibold" onclick={() => apply({ open: false })}>{tr.closeAll}</button>
+      </div>
+      <div class="flex gap-1 items-center">
+        <span>{tr.led}</span>
+        <button class="px-2 py-1 rounded-full bg-gray-100 hover:bg-yellow-100" onclick={() => apply({ led: true })}>{tr.ledOn}</button>
+        <button class="px-2 py-1 rounded-full bg-gray-100 hover:bg-gray-200" onclick={() => apply({ led: false })}>{tr.ledOff}</button>
       </div>
       <div>{tr.doors}</div>
       <div class="flex flex-wrap gap-1.5">

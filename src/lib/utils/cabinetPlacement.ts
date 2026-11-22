@@ -74,7 +74,7 @@ export function createRoomWalls(width: number, depth: number, centre: Point): Po
 }
 
 /** `doors`: 0 = automatic, 1–4 = doors per row. `open`: swing doors open in 3D. */
-export interface FinishChoice { door?: string; top?: string; handle?: string; doors?: number; open?: boolean; }
+export interface FinishChoice { door?: string; top?: string; handle?: string; doors?: number; open?: boolean; led?: boolean; }
 
 /** Apply finishes to the given units, or to every unit on the floor when `only` is empty. */
 export function applyFinish(choice: FinishChoice, only?: ReadonlySet<string>): number {
@@ -90,7 +90,8 @@ export function applyFinish(choice: FinishChoice, only?: ReadonlySet<string>): n
       if (choice.handle) finish.handle = choice.handle;
       if (choice.doors !== undefined) { if (choice.doors > 0) finish.doors = choice.doors; else delete finish.doors; }
       if (choice.open !== undefined) { if (choice.open) finish.open = true; else delete finish.open; }
-      const touchesFinish = !!(choice.top || choice.handle) || choice.doors !== undefined || choice.open !== undefined;
+      if (choice.led !== undefined) { if (choice.led) finish.led = true; else delete finish.led; }
+      const touchesFinish = !!(choice.top || choice.handle) || choice.doors !== undefined || choice.open !== undefined || choice.led !== undefined;
       updateFurniture(f.id, { ...(choice.door ? { color: choice.door } : {}), ...(touchesFinish ? { finish } : {}) });
     }
   } finally {

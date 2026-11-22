@@ -23,6 +23,7 @@
   import CabinetWizard from './CabinetWizard.svelte';
   import FinishPanel from './FinishPanel.svelte';
   import QuotePanel from './QuotePanel.svelte';
+  import DesignCheck from './DesignCheck.svelte';
   import { createProjectFromRoomPlan, extractRoomJsonFromZip, importRoomPlanFloors, interchangeStateFromRoomPlan, roomPlanImportOptions, roomPlanStoryIndices, validateRoomPlan, ORTHO_VERSION } from '$lib/utils/roomplanImport';
   import { addRoomPlanFloorToFloor, addRoomPlanFloorsToProject, currentProject, selectImportedElements } from '$lib/stores/project';
   import { orderedFloors } from '$lib/utils/floors';
@@ -430,6 +431,7 @@
           🍳 صمم مطبخ أو دريسنج<br><span class="text-[11px] font-normal">Kitchen / Dressing wizard</span>
         </button>
         <FinishPanel />
+        <DesignCheck />
         <button class="w-full py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold shadow" onclick={() => (showQuote = true)}>
           💰 عرض السعر وقائمة القطع<br><span class="text-[11px] font-normal">Quote & cutting list</span>
         </button>

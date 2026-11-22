@@ -15,7 +15,7 @@
       room: 'Room', newRoom: 'New room (enter size)', width: 'Width (cm)', depth: 'Depth (cm)',
       shape: 'Layout', I: 'Single wall', L: 'L-shape', U: 'U-shape', parallel: 'Parallel',
       wall: 'Main wall', top: 'Top', right: 'Right', bottom: 'Bottom', left: 'Left',
-      island: 'Island', wallUnits: 'Wall units', cancel: 'Cancel', generate: 'Generate layout',
+      island: 'Island', wallUnits: 'Wall units', needs: 'What do you need in the wardrobe?', hang: 'Hanging', drawers: 'Drawers', shelves: 'Shelves', cancel: 'Cancel', generate: 'Generate layout',
       preview: 'Preview', units: 'units',
       'room-too-small': 'The room is very small for this layout.',
       'island-skipped': 'No island: there is not enough clearance around it.',
@@ -27,7 +27,7 @@
       room: 'الغرفة', newRoom: 'غرفة جديدة (أدخل المقاس)', width: 'العرض (سم)', depth: 'العمق (سم)',
       shape: 'التصميم', I: 'حيطة واحدة', L: 'شكل L', U: 'شكل U', parallel: 'متوازي',
       wall: 'الحيطة الرئيسية', top: 'فوق', right: 'يمين', bottom: 'تحت', left: 'شمال',
-      island: 'جزيرة', wallUnits: 'وحدات علوية', cancel: 'إلغاء', generate: 'ولّد التصميم',
+      island: 'جزيرة', wallUnits: 'وحدات علوية', needs: 'محتاج إيه في الدريسنج؟', hang: 'شماعات', drawers: 'أدراج', shelves: 'رفوف', cancel: 'إلغاء', generate: 'ولّد التصميم',
       preview: 'معاينة', units: 'وحدة',
       'room-too-small': 'الغرفة صغيرة جدًا للتصميم ده.',
       'island-skipped': 'مفيش جزيرة: المساحة حواليها مش كفاية.',
@@ -46,12 +46,15 @@
   let startSide = $state<0 | 1 | 2 | 3>(0);
   let island = $state(false);
   let wallUnits = $state(true);
+  let needHang = $state(50);
+  let needDrawers = $state(25);
+  let needShelves = $state(25);
   const rooms: RoomChoice[] = roomChoices();
 
   const chosen = $derived(rooms.find(r => r.id === roomId) ?? null);
   const W = $derived(chosen ? chosen.width : Math.max(100, Number(width) || 0));
   const D = $derived(chosen ? chosen.depth : Math.max(100, Number(depth) || 0));
-  const options = $derived<LayoutOptions>({ kind, shape: kind === 'dressing' && shape === 'parallel' ? 'U' : shape, width: W, depth: D, island, wallUnits: kind === 'kitchen' && wallUnits, startSide });
+  const options = $derived<LayoutOptions>({ kind, shape: kind === 'dressing' && shape === 'parallel' ? 'U' : shape, width: W, depth: D, island, wallUnits: kind === 'kitchen' && wallUnits, startSide, ...(kind === 'dressing' ? { needs: { hang: needHang, drawers: needDrawers, shelves: needShelves } } : {}) });
   const plan = $derived(previewLayout(options));
 
   function rects() {
@@ -115,6 +118,20 @@
         <label class="flex items-center gap-1.5"><input type="checkbox" bind:checked={island} class="accent-blue-500" />{tr.island}</label>
         {#if kind === 'kitchen'}<label class="flex items-center gap-1.5"><input type="checkbox" bind:checked={wallUnits} class="accent-blue-500" />{tr.wallUnits}</label>{/if}
       </div>
+
+      {#if kind === 'dressing'}
+        <div class="space-y-1">
+          <div class="text-gray-500">{tr.needs}</div>
+          {#each [['hang', tr.hang], ['drawers', tr.drawers], ['shelves', tr.shelves]] as [key, label]}
+            <label class="flex items-center gap-2">
+              <span class="w-16">{label}</span>
+              {#if key === 'hang'}<input type="range" min="0" max="100" bind:value={needHang} class="flex-1 accent-amber-500" />
+              {:else if key === 'drawers'}<input type="range" min="0" max="100" bind:value={needDrawers} class="flex-1 accent-amber-500" />
+              {:else}<input type="range" min="0" max="100" bind:value={needShelves} class="flex-1 accent-amber-500" />{/if}
+            </label>
+          {/each}
+        </div>
+      {/if}
 
       <div>
         <div class="mb-1 text-gray-500">{tr.preview} · {plan.items.length} {tr.units}</div>

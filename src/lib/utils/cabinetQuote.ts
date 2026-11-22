@@ -22,6 +22,7 @@ export const defaultPriceBook: PriceBook = {
     base: { mode: 'm', price: 4500 }, drawers: { mode: 'm', price: 6000 }, sink: { mode: 'm', price: 4800 }, hob: { mode: 'm', price: 4500 },
     corner_base: { mode: 'unit', price: 5500 }, island: { mode: 'm', price: 7000 }, filler: { mode: 'm', price: 1500 },
     wall: { mode: 'm', price: 3500 }, wall_corner: { mode: 'unit', price: 3500 }, hood: { mode: 'unit', price: 3000 },
+    dishwasher: { mode: 'unit', price: 18000 }, washer: { mode: 'unit', price: 16000 }, microwave: { mode: 'unit', price: 6000 }, oven_base: { mode: 'unit', price: 14000 },
     tall: { mode: 'm', price: 6500 }, tall_oven: { mode: 'm', price: 7500 }, fridge_tall: { mode: 'm', price: 6500 },
     hang: { mode: 'm', price: 6500 }, shelves: { mode: 'm', price: 5000 }, dress_drawers: { mode: 'm', price: 7000 },
     shoes: { mode: 'm', price: 4500 }, dress_corner: { mode: 'unit', price: 9000 }, dress_island: { mode: 'm', price: 8000 }, vanity: { mode: 'm', price: 7000 },

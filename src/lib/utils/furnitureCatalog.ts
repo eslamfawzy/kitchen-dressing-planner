@@ -19,7 +19,7 @@ export interface FurnitureDef {
 // ── Kitchen units and dressing room (data; 3D builder lives in cabinetCatalog.ts) ──
 export type CabinetKind =
   | 'base' | 'drawers' | 'sink' | 'hob' | 'corner_base' | 'island' | 'fridge_tall' | 'tall' | 'tall_oven'
-  | 'wall' | 'wall_corner' | 'hood' | 'filler'
+  | 'wall' | 'wall_corner' | 'hood' | 'filler' | 'dishwasher' | 'washer' | 'microwave' | 'oven_base'
   | 'hang' | 'shelves' | 'shoes' | 'dress_drawers' | 'dress_corner' | 'vanity' | 'dress_island';
 
 export interface CabinetDef {
@@ -64,6 +64,10 @@ function buildCabinetCatalog(): CabinetDef[] {
   k('kit_island_120', 'Island 120', '🏝️', 'island', 120, 90, BASE_H);
   k('kit_island_180', 'Island 180', '🏝️', 'island', 180, 90, BASE_H);
   k('kit_filler_10', 'Filler Panel 10', '▮', 'filler', 10, BASE_D, BASE_H);
+  k('kit_dishwasher_60', 'Dishwasher 60', '🍽️', 'dishwasher', 60, BASE_D, BASE_H);
+  k('kit_washer_60', 'Washing Machine 60', '🧺', 'washer', 60, BASE_D, BASE_H);
+  k('kit_oven_base_60', 'Built-in Oven Unit 60', '🔥', 'oven_base', 60, BASE_D, BASE_H);
+  k('kit_microwave_60', 'Microwave Unit 60', '📟', 'microwave', 60, WALL_D, 38, 110);
 
   // ── Kitchen: wall units ────────────────────────────────────────────────
   for (const w of [30, 40, 50, 60, 80, 100]) k(`kit_wall_${w}`, `Wall Unit ${w}`, '🔲', 'wall', w, WALL_D, WALL_H, WALL_ELEV);
@@ -109,6 +113,10 @@ const KIND_LABELS: Record<CabinetKind, { pt: string; ar: string }> = {
   corner_base: { pt: 'Armário baixo de canto (L)', ar: 'وحدة سفلية ركنة (L)' },
   island: { pt: 'Ilha', ar: 'جزيرة' },
   filler: { pt: 'Painel de preenchimento', ar: 'فيلر' },
+  dishwasher: { pt: 'Lava-louças', ar: 'غسالة أطباق' },
+  washer: { pt: 'Máquina de lavar', ar: 'غسالة ملابس' },
+  microwave: { pt: 'Micro-ondas', ar: 'ميكروويف' },
+  oven_base: { pt: 'Armário com forno', ar: 'وحدة فرن مبيّت' },
   wall: { pt: 'Armário aéreo', ar: 'وحدة علوية' },
   wall_corner: { pt: 'Armário aéreo de canto (L)', ar: 'وحدة علوية ركنة (L)' },
   hood: { pt: 'Armário de coifa', ar: 'وحدة هود' },

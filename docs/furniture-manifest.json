@@ -530,6 +530,58 @@
       "model": null
     },
     {
+      "id": "kit_dishwasher_60",
+      "name": "Dishwasher 60",
+      "category": "Kitchen Units",
+      "dimensionsCm": {
+        "width": 60,
+        "depth": 60,
+        "height": 85
+      },
+      "dimensionStatus": "catalog-defaults-not-product-measurements",
+      "webRepresentation": "procedural",
+      "model": null
+    },
+    {
+      "id": "kit_washer_60",
+      "name": "Washing Machine 60",
+      "category": "Kitchen Units",
+      "dimensionsCm": {
+        "width": 60,
+        "depth": 60,
+        "height": 85
+      },
+      "dimensionStatus": "catalog-defaults-not-product-measurements",
+      "webRepresentation": "procedural",
+      "model": null
+    },
+    {
+      "id": "kit_oven_base_60",
+      "name": "Built-in Oven Unit 60",
+      "category": "Kitchen Units",
+      "dimensionsCm": {
+        "width": 60,
+        "depth": 60,
+        "height": 85
+      },
+      "dimensionStatus": "catalog-defaults-not-product-measurements",
+      "webRepresentation": "procedural",
+      "model": null
+    },
+    {
+      "id": "kit_microwave_60",
+      "name": "Microwave Unit 60",
+      "category": "Kitchen Units",
+      "dimensionsCm": {
+        "width": 60,
+        "depth": 35,
+        "height": 38
+      },
+      "dimensionStatus": "catalog-defaults-not-product-measurements",
+      "webRepresentation": "procedural",
+      "model": null
+    },
+    {
       "id": "kit_wall_30",
       "name": "Wall Unit 30",
       "category": "Kitchen Units",

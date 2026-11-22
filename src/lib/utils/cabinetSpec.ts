@@ -33,6 +33,8 @@ export function unitSpec(kind: CabinetKind, widthCm: number): UnitSpec {
     case 'corner_base': return { ...base, doors: 2, shelves: 1, top: true, corner: true };
     case 'island': return { ...base, doors: Math.ceil(widthCm / 60), shelves: 1, top: true };
     case 'filler': return { ...base };
+    case 'dishwasher': case 'washer': case 'oven_base': return { ...base, readymade: true };
+    case 'microwave': return { ...base, floor: false, readymade: true };
     case 'wall': return { ...base, doors: widthCm > 50 ? 2 : 1, shelves: 1, floor: false };
     case 'wall_corner': return { ...base, doors: 2, shelves: 1, floor: false, corner: true };
     case 'hood': return { ...base, floor: false, readymade: true };

@@ -72,7 +72,11 @@ export interface LayoutOptions {
   wallUnits: boolean;
   /** Which wall the main run uses: 0 top, 1 right, 2 bottom, 3 left. */
   startSide: 0 | 1 | 2 | 3;
+  /** Dressing only: relative share of hanging / drawers / shelves (any scale). Default mixes all three. */
+  needs?: DressingNeeds;
 }
+
+export interface DressingNeeds { hang: number; drawers: number; shelves: number; }
 
 export interface PlannedItem {
   catalogId: string;
@@ -140,11 +144,13 @@ function kitchenRunPieces(length: number, fridgeAtEnd: boolean, appliances: bool
   const mid: Piece[] = [];
   if (appliances) {
     const sets: Piece[][] = [
-      [{ id: 'kit_sink_100', width: 100, role: 'sink' }, { id: 'kit_drawers_60', width: 60 }, { id: 'kit_hob_60', width: 60, role: 'hob' }],
+      [{ id: 'kit_sink_100', width: 100, role: 'sink' }, { id: 'kit_dishwasher_60', width: 60 }, { id: 'kit_hob_60', width: 60, role: 'hob' }],
       [{ id: 'kit_sink_80', width: 80, role: 'sink' }, { id: 'kit_hob_60', width: 60, role: 'hob' }],
       [{ id: 'kit_sink_80', width: 80, role: 'sink' }],
     ];
-    const fixed = sets.find(s => s.reduce((a, p) => a + p.width, 0) <= avail);
+    let fixed = sets.find(s => s.reduce((a, p) => a + p.width, 0) <= avail);
+    // Fridge sits at the far end, so put the hob at the other end of the cluster (heat away from the fridge).
+    if (fixed && fridge) fixed = [...fixed].reverse();
     if (fixed) {
       const used = fixed.reduce((a, p) => a + p.width, 0);
       const free = avail - used;
@@ -163,21 +169,31 @@ function kitchenRunPieces(length: number, fridgeAtEnd: boolean, appliances: bool
   return pieces;
 }
 
-function dressingRunPieces(length: number): Piece[] {
+/** Split `n` pieces across kinds in proportion to the weights (largest remainder). */
+function allocate(n: number, needs: DressingNeeds): Array<'hang' | 'drawers' | 'shelves'> {
+  const kinds = (['hang', 'drawers', 'shelves'] as const).map(k => ({ k, w: Math.max(0, needs[k] || 0) }));
+  const total = kinds.reduce((a, x) => a + x.w, 0) || 1;
+  const raw = kinds.map(x => ({ k: x.k, exact: (x.w / total) * n }));
+  const counts = raw.map(r => ({ k: r.k, c: Math.floor(r.exact), rem: r.exact - Math.floor(r.exact) }));
+  let left = n - counts.reduce((a, x) => a + x.c, 0);
+  for (const x of [...counts].sort((a, b) => b.rem - a.rem)) { if (left <= 0) break; x.c += 1; left -= 1; }
+  // Hanging first, then drawers, then shelves: easy to read along a wall.
+  return counts.flatMap(x => Array<typeof x.k>(x.c).fill(x.k));
+}
+
+function dressingRunPieces(length: number, needs?: DressingNeeds): Piece[] {
   const n = Math.max(1, Math.ceil(length / 110));
   const w = round1(length / n);
-  const pattern = ['hang', 'shelves', 'hang', 'drawers', 'hang', 'shelves', 'drawers'];
+  const defaultPattern = ['hang', 'shelves', 'hang', 'drawers', 'hang', 'shelves', 'drawers'];
+  const kinds = needs ? allocate(n, needs) : Array.from({ length: n }, (_, i) => defaultPattern[i % defaultPattern.length]);
   const std = (kind: string) => {
     const ws = kind === 'drawers' ? [100, 80, 60] : [100, 80, 60, 50];
     return ws.reduce((best, x) => (Math.abs(x - w) < Math.abs(best - w) ? x : best), ws[0]);
   };
-  const out: Piece[] = [];
-  for (let i = 0; i < n; i++) {
-    const kind = pattern[i % pattern.length];
-    const id = kind === 'hang' ? `dr_hang_${std('hang')}` : kind === 'shelves' ? `dr_shelves_${std('shelves')}` : `dr_drawers_${std('drawers')}`;
-    out.push({ id, width: w, custom: true });
-  }
-  return out;
+  return kinds.map(kind => ({
+    id: kind === 'hang' ? `dr_hang_${std('hang')}` : kind === 'shelves' ? `dr_shelves_${std('shelves')}` : `dr_drawers_${std('drawers')}`,
+    width: w, custom: true,
+  }));
 }
 
 function wallPieceId(width: number): { id: string; parts: number } {
@@ -266,7 +282,7 @@ function planCanonical(o: LayoutOptions, W: number, D: number, notes: string[]):
       pieces = kitchenRunPieces(length, idx === fridgeRun && freeAtEnd, idx === host);
       if (r.side >= 2) pieces.reverse();
     } else {
-      pieces = dressingRunPieces(length);
+      pieces = dressingRunPieces(length, o.needs);
     }
     let cursor = from;
     for (const p of pieces) {
