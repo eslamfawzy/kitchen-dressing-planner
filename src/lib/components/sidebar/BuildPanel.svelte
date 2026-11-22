@@ -22,6 +22,7 @@
   import CustomModelPanel from './CustomModelPanel.svelte';
   import CabinetWizard from './CabinetWizard.svelte';
   import FinishPanel from './FinishPanel.svelte';
+  import QuotePanel from './QuotePanel.svelte';
   import { createProjectFromRoomPlan, extractRoomJsonFromZip, importRoomPlanFloors, interchangeStateFromRoomPlan, roomPlanImportOptions, roomPlanStoryIndices, validateRoomPlan, ORTHO_VERSION } from '$lib/utils/roomplanImport';
   import { addRoomPlanFloorToFloor, addRoomPlanFloorsToProject, currentProject, selectImportedElements } from '$lib/stores/project';
   import { orderedFloors } from '$lib/utils/floors';
@@ -42,6 +43,7 @@
   // RoomPlan import dialog state
   let showImportDialog = $state(false);
   let showCabinetWizard = $state(false);
+  let showQuote = $state(false);
   let importFileName = $state('');
   // Raw, not deep state: the import structured-clones parts of the scan, and a reactive proxy cannot be cloned.
   let importJsonData: any = $state.raw(null);
@@ -662,6 +664,9 @@
         <button class="w-full py-2 rounded-lg bg-amber-500 hover:bg-amber-600 text-white text-xs font-semibold" onclick={() => (showCabinetWizard = true)}>
           🍳 Kitchen / Dressing wizard · معالج المطبخ والدريسنج
         </button>
+        <button class="w-full py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold" onclick={() => (showQuote = true)}>
+          💰 Quote & cutting list · عرض السعر وقائمة القطع
+        </button>
         <FinishPanel />
         <CustomModelPanel />
         <!-- Search with clear button and result count -->
@@ -849,6 +854,10 @@
       </div>
     </div>
   </div>
+{/if}
+
+{#if showQuote}
+  <QuotePanel onclose={() => (showQuote = false)} />
 {/if}
 
 {#if showCabinetWizard}
