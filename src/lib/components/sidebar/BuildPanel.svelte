@@ -37,7 +37,7 @@
   let unsupportedImage = $state(false);
 
   // AreaSummaryPanel moved to top bar dialog
-  let activeTab = $state<'draw' | 'rooms' | 'objects'>('draw');
+  let activeTab = $state<'kitchen' | 'draw' | 'rooms' | 'objects'>('kitchen');
   let constructionOpen = $state(true);
   let selectedCategory = $state<string>('All');
   // RoomPlan import dialog state
@@ -405,6 +405,10 @@
   <!-- Tabs -->
   <div class="flex border-b border-gray-200">
     <button
+      class="flex-1 py-2.5 text-xs font-semibold uppercase tracking-wide {activeTab === 'kitchen' ? 'text-amber-700 border-b-2 border-amber-500 bg-amber-50' : 'text-gray-500 hover:text-gray-700'}"
+      onclick={() => activeTab = 'kitchen'}
+    >🍳 مطبخ</button>
+    <button
       class="flex-1 py-2.5 text-xs font-semibold uppercase tracking-wide {activeTab === 'draw' ? 'text-slate-800 border-b-2 border-blue-500 bg-blue-50' : 'text-gray-500 hover:text-gray-700'}"
       onclick={() => activeTab = 'draw'}
     >{$t('buildTools.build')}</button>
@@ -419,7 +423,19 @@
   </div>
 
   <div class="flex-1 overflow-y-auto p-3">
-    {#if activeTab === 'draw'}
+    {#if activeTab === 'kitchen'}
+      <div class="space-y-3" dir="auto">
+        <div class="text-xs text-gray-500 leading-relaxed">١) اختار نوع الغرفة ومقاسها · ٢) اختار الخامات والدرف · ٣) خد عرض السعر وابعته واتساب<br><span class="text-gray-400">1) Pick room · 2) Pick finishes & doors · 3) Get a quote and send it</span></div>
+        <button class="w-full py-3 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-sm font-bold shadow" onclick={() => (showCabinetWizard = true)}>
+          🍳 صمم مطبخ أو دريسنج<br><span class="text-[11px] font-normal">Kitchen / Dressing wizard</span>
+        </button>
+        <FinishPanel />
+        <button class="w-full py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold shadow" onclick={() => (showQuote = true)}>
+          💰 عرض السعر وقائمة القطع<br><span class="text-[11px] font-normal">Quote & cutting list</span>
+        </button>
+        <div class="text-[11px] text-gray-400">لتعديل وحدة: اضغط عليها في الرسم ثم غيّر الخامات أو الدرف. لإضافة وحدات فردية: تاب OBJECTS.</div>
+      </div>
+    {:else if activeTab === 'draw'}
       <div class="space-y-1">
         <h3 class="text-xs font-semibold text-gray-400 uppercase mb-2">{$t('buildTools.tools')}</h3>
         <button
@@ -661,13 +677,6 @@
 
     {:else if activeTab === 'objects'}
       <div class="space-y-2">
-        <button class="w-full py-2 rounded-lg bg-amber-500 hover:bg-amber-600 text-white text-xs font-semibold" onclick={() => (showCabinetWizard = true)}>
-          🍳 Kitchen / Dressing wizard · معالج المطبخ والدريسنج
-        </button>
-        <button class="w-full py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold" onclick={() => (showQuote = true)}>
-          💰 Quote & cutting list · عرض السعر وقائمة القطع
-        </button>
-        <FinishPanel />
         <CustomModelPanel />
         <!-- Search with clear button and result count -->
         <div class="relative">
