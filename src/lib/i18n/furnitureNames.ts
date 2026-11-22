@@ -1,9 +1,10 @@
 import type { FurnitureItem, Project } from '$lib/models/types';
 import type { Locale } from './index';
-import { getCatalogItem } from '$lib/utils/furnitureCatalog';
+import { getCatalogItem, cabinetCatalog, localizedCabinetName } from '$lib/utils/furnitureCatalog';
 
 // Display names only: catalog IDs and saved project data remain unchanged.
 export const portugueseFurnitureNames: Readonly<Record<string, string>> = {
+  ...Object.fromEntries(cabinetCatalog.map(c => [c.id, localizedCabinetName(c, 'pt')])),
   "sofa": "Sofá",
   "loveseat": "Sofá de dois lugares",
   "chair": "Poltrona",

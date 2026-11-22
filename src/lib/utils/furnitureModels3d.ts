@@ -1,6 +1,8 @@
 import * as THREE from 'three';
 import type { FurnitureDef } from './furnitureCatalog';
 import { proceduralMountOffset } from './furnitureElevation';
+import { getCabinetDef } from './furnitureCatalog';
+import { createCabinetModel } from './cabinetCatalog';
 
 // Helper to darken/lighten colors
 function adjustColor(color: string, factor: number): number {
@@ -294,14 +296,19 @@ export function createFurnitureModel(catalogId: string, def: FurnitureDef): THRE
     case 'trellis':
       createArbor(group, w, d, h, color);
       break;
-    default:
-      // Fallback to simple box
-      const geometry = new THREE.BoxGeometry(w, h, d);
-      const material = createMaterial(color);
-      const mesh = new THREE.Mesh(geometry, material);
-      mesh.position.y = h / 2;
-      group.add(mesh);
+    default: {
+      const cabinet = getCabinetDef(catalogId);
+      if (cabinet) {
+        // Placed size and colour (def carries overrides) on top of the unit's kind.
+        group.add(createCabinetModel({ ...cabinet, width: w, depth: d, height: h, color }));
+      } else {
+        // Fallback to simple box
+        const mesh = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), createMaterial(color));
+        mesh.position.y = h / 2;
+        group.add(mesh);
+      }
       break;
+    }
   }
 
   // Every model starts at the floor; wall and ceiling items are lifted by their elevation.

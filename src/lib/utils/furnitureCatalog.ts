@@ -14,7 +14,123 @@ export interface FurnitureDef {
   symbol?: boolean;
 }
 
+// ── Kitchen units and dressing room (data; 3D builder lives in cabinetCatalog.ts) ──
+export type CabinetKind =
+  | 'base' | 'drawers' | 'sink' | 'hob' | 'corner_base' | 'island' | 'fridge_tall' | 'tall' | 'tall_oven'
+  | 'wall' | 'wall_corner' | 'hood' | 'filler'
+  | 'hang' | 'shelves' | 'shoes' | 'dress_drawers' | 'dress_corner' | 'vanity' | 'dress_island';
+
+export interface CabinetDef {
+  id: string;
+  name: string;
+  category: 'Kitchen Units' | 'Dressing Room';
+  icon: string;
+  color: string;
+  width: number;
+  depth: number;
+  height: number;
+  kind: CabinetKind;
+  /** Default bottom height above the floor (wall units hang at 140 cm). */
+  elevation?: number;
+}
+
+export const KITCHEN_CATEGORY = 'Kitchen Units';
+export const DRESSING_CATEGORY = 'Dressing Room';
+
+const KITCHEN_COLOR = '#d6c7b0';
+const DRESS_COLOR = '#c9b79c';
+
+// Standard heights (cm): plinth 10 + carcass 72 + worktop 3 = 85.
+const BASE_H = 85, BASE_D = 60;
+const WALL_H = 70, WALL_D = 35, WALL_ELEV = 140;
+const TALL_H = 210;
+const DRESS_H = 240, DRESS_D = 55;
+
+function buildCabinetCatalog(): CabinetDef[] {
+  const out: CabinetDef[] = [];
+  const k = (id: string, name: string, icon: string, kind: CabinetKind, w: number, d: number, h: number, elevation?: number) =>
+    out.push({ id, name, category: KITCHEN_CATEGORY, icon, color: KITCHEN_COLOR, width: w, depth: d, height: h, kind, elevation });
+  const r = (id: string, name: string, icon: string, kind: CabinetKind, w: number, d: number, h: number) =>
+    out.push({ id, name, category: DRESSING_CATEGORY, icon, color: DRESS_COLOR, width: w, depth: d, height: h, kind });
+
+  // ── Kitchen: base units ────────────────────────────────────────────────
+  for (const w of [30, 40, 45, 50, 60, 80, 90, 100, 120]) k(`kit_base_${w}`, `Base Unit ${w}`, '🗄️', 'base', w, BASE_D, BASE_H);
+  for (const w of [40, 60, 80, 100]) k(`kit_drawers_${w}`, `Drawer Unit ${w}`, '🗃️', 'drawers', w, BASE_D, BASE_H);
+  for (const w of [80, 100, 120]) k(`kit_sink_${w}`, `Sink Unit ${w}`, '🚰', 'sink', w, BASE_D, BASE_H);
+  for (const w of [60, 80, 90]) k(`kit_hob_${w}`, `Hob Unit ${w}`, '🍳', 'hob', w, BASE_D, BASE_H);
+  k('kit_corner_base', 'Corner Base Unit (L)', '📐', 'corner_base', 90, 90, BASE_H);
+  k('kit_island_120', 'Island 120', '🏝️', 'island', 120, 90, BASE_H);
+  k('kit_island_180', 'Island 180', '🏝️', 'island', 180, 90, BASE_H);
+  k('kit_filler_10', 'Filler Panel 10', '▮', 'filler', 10, BASE_D, BASE_H);
+
+  // ── Kitchen: wall units ────────────────────────────────────────────────
+  for (const w of [30, 40, 50, 60, 80, 100]) k(`kit_wall_${w}`, `Wall Unit ${w}`, '🔲', 'wall', w, WALL_D, WALL_H, WALL_ELEV);
+  k('kit_wall_corner', 'Corner Wall Unit (L)', '📐', 'wall_corner', 60, 60, WALL_H, WALL_ELEV);
+  k('kit_hood_60', 'Hood Unit 60', '♨️', 'hood', 60, 50, 70, 150);
+  k('kit_hood_90', 'Hood Unit 90', '♨️', 'hood', 90, 50, 70, 150);
+
+  // ── Kitchen: tall units ────────────────────────────────────────────────
+  for (const w of [40, 60]) k(`kit_tall_${w}`, `Tall Unit ${w}`, '🚪', 'tall', w, BASE_D, TALL_H);
+  k('kit_tall_oven_60', 'Tall Oven Housing 60', '🔥', 'tall_oven', 60, BASE_D, TALL_H);
+  for (const w of [60, 70, 90]) k(`kit_tall_fridge_${w}`, `Tall Fridge Housing ${w}`, '🧊', 'fridge_tall', w, BASE_D, TALL_H);
+
+  // ── Dressing room ──────────────────────────────────────────────────────
+  for (const w of [50, 60, 80, 100]) r(`dr_hang_${w}`, `Hanging Wardrobe ${w}`, '👔', 'hang', w, DRESS_D, DRESS_H);
+  for (const w of [50, 60, 80, 100]) r(`dr_shelves_${w}`, `Shelf Unit ${w}`, '📚', 'shelves', w, DRESS_D, DRESS_H);
+  for (const w of [60, 80, 100]) r(`dr_drawers_${w}`, `Drawer Unit ${w}`, '🗃️', 'dress_drawers', w, DRESS_D, 120);
+  for (const w of [60, 80]) r(`dr_shoes_${w}`, `Shoe Rack ${w}`, '👟', 'shoes', w, 35, 120);
+  r('dr_corner', 'Corner Wardrobe (L)', '📐', 'dress_corner', 100, 100, DRESS_H);
+  r('dr_island_120', 'Dressing Island 120', '🏝️', 'dress_island', 120, 60, 95);
+  r('dr_vanity_120', 'Vanity Table 120', '💄', 'vanity', 120, 50, 78);
+  return out;
+}
+
+export const cabinetCatalog: readonly CabinetDef[] = buildCabinetCatalog();
+
+const byId = new Map(cabinetCatalog.map(c => [c.id, c]));
+
+export function getCabinetDef(id: string): CabinetDef | undefined {
+  return byId.get(id);
+}
+
+export function cabinetDefaultElevation(id: string): number {
+  return byId.get(id)?.elevation ?? 0;
+}
+
+// ── Localised names (pt now, ar used by the Arabic UI) ─────────────────────
+
+const KIND_LABELS: Record<CabinetKind, { pt: string; ar: string }> = {
+  base: { pt: 'Armário baixo', ar: 'وحدة سفلية' },
+  drawers: { pt: 'Gaveteiro', ar: 'وحدة أدراج' },
+  sink: { pt: 'Armário de pia', ar: 'وحدة حوض' },
+  hob: { pt: 'Armário de cooktop', ar: 'وحدة بوتاجاز' },
+  corner_base: { pt: 'Armário baixo de canto (L)', ar: 'وحدة سفلية ركنة (L)' },
+  island: { pt: 'Ilha', ar: 'جزيرة' },
+  filler: { pt: 'Painel de preenchimento', ar: 'فيلر' },
+  wall: { pt: 'Armário aéreo', ar: 'وحدة علوية' },
+  wall_corner: { pt: 'Armário aéreo de canto (L)', ar: 'وحدة علوية ركنة (L)' },
+  hood: { pt: 'Armário de coifa', ar: 'وحدة هود' },
+  tall: { pt: 'Armário alto', ar: 'وحدة طويلة' },
+  tall_oven: { pt: 'Torre para forno', ar: 'وحدة طويلة للفرن' },
+  fridge_tall: { pt: 'Torre para geladeira', ar: 'وحدة طويلة للثلاجة' },
+  hang: { pt: 'Guarda-roupa de cabides', ar: 'دولاب شماعات' },
+  shelves: { pt: 'Estante com prateleiras', ar: 'وحدة رفوف' },
+  dress_drawers: { pt: 'Gaveteiro', ar: 'وحدة أدراج' },
+  shoes: { pt: 'Sapateira', ar: 'وحدة أحذية' },
+  dress_corner: { pt: 'Guarda-roupa de canto (L)', ar: 'دولاب ركنة (L)' },
+  dress_island: { pt: 'Ilha de closet', ar: 'جزيرة دريسنج' },
+  vanity: { pt: 'Penteadeira', ar: 'تسريحة' },
+};
+
+export function localizedCabinetName(def: CabinetDef, language: 'pt' | 'ar'): string {
+  const size = /_(\d+)$/.exec(def.id)?.[1];
+  const label = KIND_LABELS[def.kind][language];
+  return size ? `${label} ${size}` : label;
+}
+
 export const furnitureCatalog: FurnitureDef[] = [
+  // Kitchen units and dressing room (parametric, see cabinetCatalog.ts)
+  ...cabinetCatalog.map(({ id, name, category, icon, color, width, depth, height }) => ({ id, name, category, icon, color, width, depth, height })),
   // Living Room
   { id: 'sofa', name: 'Sofa', category: 'Living Room', icon: '🛋️', color: '#a78bfa', width: 200, depth: 90, height: 80 },
   { id: 'loveseat', name: 'Loveseat', category: 'Living Room', icon: '🛋️', color: '#8b5cf6', width: 140, depth: 85, height: 80 },

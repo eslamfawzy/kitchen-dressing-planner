@@ -1,5 +1,5 @@
 import type { FurnitureItem } from '$lib/models/types';
-import { getFurnitureSize } from './furnitureCatalog';
+import { getFurnitureSize, cabinetDefaultElevation } from './furnitureCatalog';
 
 /** Largest accepted height above the floor, in cm (100 m). */
 export const MAX_FURNITURE_ELEVATION = 10_000;
@@ -38,6 +38,7 @@ export function defaultFurnitureElevation(item: Pick<FurnitureItem, 'catalogId' 
   // A project model is fitted with its bottom on the floor whatever its fallback catalog id.
   if (item.customModelId) return 0;
   const mounted = MOUNTED[item.catalogId];
+  if (!mounted) return cabinetDefaultElevation(item.catalogId);
   return mounted ? Math.max(0, mounted(getFurnitureSize(item as FurnitureItem).height)) : 0;
 }
 
