@@ -9,6 +9,7 @@
   import { localStore, storageErrorMessage, downloadLibraryBackup } from '$lib/services/datastore';
   import { openProject } from '$lib/services/projectOpening';
   import { createDefaultProject } from '$lib/stores/project';
+  import { createStarterProject } from '$lib/utils/starterProject';
   import WelcomeScreen from '$lib/components/WelcomeScreen.svelte';
   import LibraryRestoreDialog from '$lib/components/LibraryRestoreDialog.svelte';
   import ProjectPackageDialog from '$lib/components/ProjectPackageDialog.svelte';
@@ -86,7 +87,7 @@
   }
 
   function createFromTemplate(index: number) { return createProject(houseTemplates[index].create); }
-  function newProject() { return createProject(() => createDefaultProject('Untitled Project')); }
+  function newProject() { return createProject(() => createStarterProject()); }
 
   /** The last copy Duplicate made: named in a status line and outlined in the list. */
   let duplicatedId = $state<string | null>(null);
