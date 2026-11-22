@@ -14,6 +14,8 @@
   import { interchangeProjectName } from '$lib/utils/interchange';
   import { localStore, storageErrorMessage, downloadLibraryBackup } from '$lib/services/datastore';
   import { autoSave, markClean, saveState } from '$lib/stores/saveStatus';
+  import { decodeShare, SHARE_PREFIX } from '$lib/utils/shareLink';
+  import { readProject } from '$lib/utils/projectValidation';
   import { startAgentBridge } from '$lib/services/agentBridge';
   import { createProjectFromRoomPlan, isRoomPlanJson } from '$lib/utils/roomplanImport';
   import TopBar from '$lib/components/toolbar/TopBar.svelte';
@@ -147,6 +149,19 @@
         } else {
           importError = new CaptureImportError('captureImport.code');
         }
+      }
+
+      // Shared design link: #share=<gzip+base64url project>
+      if (window.location.hash.startsWith(SHARE_PREFIX)) {
+        try {
+          const shared = readProject(await decodeShare(window.location.hash.slice(SHARE_PREFIX.length)));
+          const p = { ...shared, id: createDefaultProject().id };
+          loadProject(p);
+          await autoSave();
+          replaceState(`${base}/editor?id=${p.id}`, page.state);
+          ready = true;
+          return;
+        } catch { /* Bad link: fall through to a normal start. */ }
       }
 
       const id = url.searchParams.get('id');

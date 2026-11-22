@@ -4,6 +4,9 @@
   import { modalDialog } from '$lib/utils/modalDialog';
   import { activeFloor } from '$lib/stores/project';
   import { computeQuote, loadPriceBook, savePriceBook, defaultPriceBook, allCabinetKinds, unitLabel, type PriceBook } from '$lib/utils/cabinetQuote';
+  import { currentProject } from '$lib/stores/project';
+  import { base } from '$app/paths';
+  import { shareUrl, whatsappUrl } from '$lib/utils/shareLink';
   import { computeBom } from '$lib/utils/cabinetBom';
   import { downloadText, toCsv, quoteRows, cuttingRows, quoteHtml } from '$lib/utils/quoteExport';
   import { topFinishes, handleFinishes } from '$lib/utils/cabinetFinishes';
@@ -20,7 +23,7 @@
       part: 'Part', material: 'Material', length: 'Length mm', widthMm: 'Width mm', hardware: 'Hardware', sheets: 'Sheets 2440×1220 (+15%)',
       area: 'Board area m²', save: 'Save prices', reset: 'Reset', perM: 'per metre', perPiece: 'per piece', tops: 'Worktops (per metre)', handlesL: 'Handles (per piece)',
       units: 'Units', note: 'Prices are estimates from your price list. Doors and windows are not deducted.', saved: 'Saved',
-      date: 'Date', close: 'Close',
+      date: 'Date', close: 'Close', phone: 'Client phone', waNumber: 'Your WhatsApp number', send: 'Send design to WhatsApp', copyLink: 'Copy share link', copied: 'Link copied', sentLead: 'Saved as lead', failed: 'Failed', msgHello: 'Hello, here is my kitchen/dressing design',
     },
     ar: {
       title: 'عرض السعر وقائمة القطع', quote: 'عرض السعر', cutting: 'قائمة القطع', prices: 'الأسعار', client: 'اسم العميل',
@@ -30,7 +33,7 @@
       part: 'القطعة', material: 'الخامة', length: 'الطول مم', widthMm: 'العرض مم', hardware: 'الاكسسوار', sheets: 'ألواح 2440×1220 (+15%)',
       area: 'مساحة الخشب م²', save: 'حفظ الأسعار', reset: 'استرجاع', perM: 'للمتر', perPiece: 'للقطعة', tops: 'أسطح الشغل (للمتر)', handlesL: 'المقابض (للقطعة)',
       units: 'الوحدات', note: 'الأسعار تقديرية حسب قائمة أسعارك. الأبواب والشبابيك غير مخصومة.', saved: 'تم الحفظ',
-      date: 'التاريخ', close: 'إغلاق',
+      date: 'التاريخ', close: 'إغلاق', phone: 'رقم تليفون العميل', waNumber: 'رقم الواتساب بتاعك', send: 'ابعت التصميم على واتساب', copyLink: 'نسخ رابط المشاركة', copied: 'تم نسخ الرابط', sentLead: 'اتسجل كعميل محتمل', failed: 'فشل', msgHello: 'أهلاً، ده تصميم المطبخ/الدريسنج بتاعي',
     },
   };
   const tr = ar ? dict.ar : dict.en;
@@ -49,6 +52,27 @@
   const fmt = (n: number) => n.toLocaleString('en-US');
   const today = new Date().toISOString().slice(0, 10);
 
+  let phone = $state('');
+  let waNumber = $state((() => { try { return localStorage.getItem('o3d_wa_number') ?? ''; } catch { return ''; } })());
+  let shareMsg = $state('');
+  async function makeLink(): Promise<string> {
+    const p = get(currentProject);
+    if (!p) throw new Error('no project');
+    return shareUrl(p, window.location.origin, base);
+  }
+  async function copyLink() {
+    try { await navigator.clipboard.writeText(await makeLink()); shareMsg = tr.copied; } catch (e) { shareMsg = `${tr.failed}: ${(e as Error).message}`; }
+  }
+  async function sendWhatsApp() {
+    try {
+      try { localStorage.setItem('o3d_wa_number', waNumber); } catch { /* optional */ }
+      const link = await makeLink();
+      // Record the enquiry first; WhatsApp opens even if the lead endpoint is unreachable.
+      fetch('/api/leads', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: client, phone, total: quote.total, currency: book.currency, units: quote.unitCount, link }) }).then(r => { if (r.ok) shareMsg = tr.sentLead; }).catch(() => {});
+      const text = `${tr.msgHello}\n${client ? client + '\n' : ''}${quote.unitCount} ${tr.units} · ${fmt(quote.total)} ${book.currency}\n${link}`;
+      window.open(whatsappUrl(waNumber, text), '_blank', 'noopener');
+    } catch (e) { shareMsg = `${tr.failed}: ${(e as Error).message}`; }
+  }
   function savePrices() { savePriceBook($state.snapshot(book) as PriceBook); savedMsg = true; setTimeout(() => (savedMsg = false), 1500); }
   function resetPrices() { book = structuredClone(defaultPriceBook); }
   function csvQuote() { downloadText('quote.csv', toCsv(quoteRows(computeQuote(items, book, { discountPct: Number(discountPct) || 0, vatPct: Number(vatPct) || 0, lang: 'en' }), book.currency))); }
@@ -105,6 +129,15 @@
           </tbody>
         </table>
         <div class="mt-2 text-gray-400">{tr.note}</div>
+        <div class="mt-3 pt-3 border-t border-gray-100 grid grid-cols-2 gap-2">
+          <label>{tr.phone}<input type="tel" dir="ltr" class="w-full mt-1 px-2 py-1.5 border border-gray-200 rounded-lg" bind:value={phone} /></label>
+          <label>{tr.waNumber}<input type="tel" dir="ltr" placeholder="2010xxxxxxx" class="w-full mt-1 px-2 py-1.5 border border-gray-200 rounded-lg" bind:value={waNumber} /></label>
+          <div class="col-span-2 flex gap-2 items-center">
+            <button class="px-3 py-1.5 rounded-lg bg-green-600 hover:bg-green-700 text-white font-semibold disabled:opacity-40" disabled={!waNumber.replace(/\D/g, '')} onclick={sendWhatsApp}>{tr.send}</button>
+            <button class="px-3 py-1.5 rounded-lg bg-gray-100 hover:bg-gray-200" onclick={copyLink}>{tr.copyLink}</button>
+            {#if shareMsg}<span class="text-gray-500">{shareMsg}</span>{/if}
+          </div>
+        </div>
       {:else if tab === 'cutting'}
         <table class="w-full">
           <thead><tr class="text-gray-500 border-b"><th class="text-start py-1">{tr.part}</th><th class="text-start">{tr.material}</th><th class="text-end">{tr.length}</th><th class="text-end">{tr.widthMm}</th><th class="text-end">{tr.qty}</th></tr></thead>

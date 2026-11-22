@@ -1,12 +1,13 @@
 import { derived, writable } from 'svelte/store';
 import { en } from './locales/en';
 import { pt } from './locales/pt';
+import { ar } from './locales/ar';
 
-export type Locale = 'en' | 'pt';
+export type Locale = 'en' | 'pt' | 'ar';
 export type TranslationKey = keyof typeof en;
-const dictionaries: Record<Locale, Record<TranslationKey, string>> = { en, pt };
+const dictionaries: Record<Locale, Record<TranslationKey, string>> = { en, pt, ar };
 const preference = writable<Locale>('en');
-const isLocale = (value: unknown): value is Locale => value === 'en' || value === 'pt';
+const isLocale = (value: unknown): value is Locale => value === 'en' || value === 'pt' || value === 'ar';
 
 export function translate(language: Locale, key: TranslationKey, variables: Record<string, string | number> = {}): string {
   // Single-pass substitution preserves literal braces in user-provided values.
@@ -19,7 +20,11 @@ export const locale = {
   set(value: Locale) {
     if (!isLocale(value)) return;
     preference.set(value);
-    if (typeof document !== 'undefined') document.documentElement.lang = value;
+    if (typeof document !== 'undefined') {
+      document.documentElement.lang = value;
+      // Arabic flips the whole interface to right-to-left.
+      document.documentElement.dir = value === 'ar' ? 'rtl' : 'ltr';
+    }
     try { localStorage.setItem('o3d_locale', value); } catch { /* In-memory choice still works. */ }
   },
 };

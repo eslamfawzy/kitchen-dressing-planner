@@ -22,7 +22,7 @@ describe('locale preferences', () => {
   it('updates subscribed text, persists the choice and sets document language', () => {
     const setItem = vi.fn();
     vi.stubGlobal('localStorage', { setItem });
-    vi.stubGlobal('document', { documentElement: { lang: 'en' } });
+    vi.stubGlobal('document', { documentElement: { lang: 'en', dir: 'ltr' } });
     const values: string[] = [];
     const unsubscribe = t.subscribe((translate) => values.push(translate('settings.title')));
     locale.set('pt');
@@ -47,5 +47,22 @@ describe('locale preferences', () => {
     expect(() => initializeLocale()).not.toThrow();
     expect(() => locale.set('pt')).not.toThrow();
     expect(get(t)('settings.title')).toBe(translate('pt', 'settings.title'));
+  });
+});
+
+import { ar } from '../src/lib/i18n/locales/ar';
+describe('arabic locale', () => {
+  it('has every key, keeps substitution tokens and flips direction', () => {
+    expect(Object.keys(ar).sort()).toEqual(Object.keys(en).sort());
+    for (const key of Object.keys(en) as (keyof typeof en)[]) {
+      expect(ar[key].match(/\{\w+\}/g) ?? []).toEqual(en[key].match(/\{\w+\}/g) ?? []);
+    }
+    vi.stubGlobal('localStorage', { setItem: vi.fn() });
+    vi.stubGlobal('document', { documentElement: { lang: 'en', dir: 'ltr' } });
+    locale.set('ar');
+    expect(document.documentElement.dir).toBe('rtl');
+    expect(translate('ar', 'settings.title')).toBe('الإعدادات');
+    locale.set('en');
+    expect(document.documentElement.dir).toBe('ltr');
   });
 });
