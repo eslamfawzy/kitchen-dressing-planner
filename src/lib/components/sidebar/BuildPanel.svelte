@@ -20,6 +20,7 @@
   import type { FurnitureDef } from '$lib/utils/furnitureCatalog';
   import FurnitureThumbnail from './FurnitureThumbnail.svelte';
   import CustomModelPanel from './CustomModelPanel.svelte';
+  import CabinetWizard from './CabinetWizard.svelte';
   import { createProjectFromRoomPlan, extractRoomJsonFromZip, importRoomPlanFloors, interchangeStateFromRoomPlan, roomPlanImportOptions, roomPlanStoryIndices, validateRoomPlan, ORTHO_VERSION } from '$lib/utils/roomplanImport';
   import { addRoomPlanFloorToFloor, addRoomPlanFloorsToProject, currentProject, selectImportedElements } from '$lib/stores/project';
   import { orderedFloors } from '$lib/utils/floors';
@@ -39,6 +40,7 @@
   let selectedCategory = $state<string>('All');
   // RoomPlan import dialog state
   let showImportDialog = $state(false);
+  let showCabinetWizard = $state(false);
   let importFileName = $state('');
   // Raw, not deep state: the import structured-clones parts of the scan, and a reactive proxy cannot be cloned.
   let importJsonData: any = $state.raw(null);
@@ -656,6 +658,9 @@
 
     {:else if activeTab === 'objects'}
       <div class="space-y-2">
+        <button class="w-full py-2 rounded-lg bg-amber-500 hover:bg-amber-600 text-white text-xs font-semibold" onclick={() => (showCabinetWizard = true)}>
+          🍳 Kitchen / Dressing wizard · معالج المطبخ والدريسنج
+        </button>
         <CustomModelPanel />
         <!-- Search with clear button and result count -->
         <div class="relative">
@@ -842,6 +847,10 @@
       </div>
     </div>
   </div>
+{/if}
+
+{#if showCabinetWizard}
+  <CabinetWizard onclose={() => (showCabinetWizard = false)} />
 {/if}
 
 <!-- RoomPlan Import Options Dialog -->

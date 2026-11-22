@@ -4,6 +4,8 @@
  * where w = width*zoom, d = depth*zoom. Context is already translated & rotated.
  */
 
+import { getCabinetDef } from './furnitureCatalog';
+
 type DrawFn = (ctx: CanvasRenderingContext2D, w: number, d: number, color: string) => void;
 
 // Helper: rounded rect
@@ -1000,6 +1002,12 @@ export function drawFurnitureIcon(
   ctx.strokeStyle = strokeColor;
   ctx.lineWidth = 1;
 
+  const cabinet = getCabinetDef(catalogId);
+  if (cabinet) {
+    drawCabinetIcon(ctx, cabinet.kind, cabinet.width, w, d, color, strokeColor);
+    return;
+  }
+
   const drawer = iconDrawers[catalogId];
   if (drawer) {
     drawer(ctx, w, d, color);
@@ -1009,4 +1017,48 @@ export function drawFurnitureIcon(
     ctx.fill();
     ctx.stroke();
   }
+}
+
+/** Top-down kitchen / dressing unit: solid body, door lines, blue front edge (back is at -y). */
+function drawCabinetIcon(ctx: CanvasRenderingContext2D, kind: string, catalogWidth: number, w: number, d: number, color: string, stroke: string) {
+  const wall = kind === 'wall' || kind === 'wall_corner' || kind === 'hood';
+  const arms: Record<string, number> = { corner_base: 60, wall_corner: 35, dress_corner: 55 };
+  ctx.save();
+  ctx.fillStyle = wall ? color + '40' : color + 'd8';
+  ctx.strokeStyle = stroke;
+  ctx.lineWidth = 1;
+  if (kind in arms) {
+    const a = (arms[kind] / catalogWidth) * w;
+    ctx.beginPath();
+    ctx.moveTo(-w / 2, -d / 2); ctx.lineTo(w / 2, -d / 2); ctx.lineTo(w / 2, d / 2);
+    ctx.lineTo(w / 2 - a, d / 2); ctx.lineTo(w / 2 - a, -d / 2 + a); ctx.lineTo(-w / 2, -d / 2 + a);
+    ctx.closePath();
+    ctx.fill(); ctx.stroke();
+    ctx.strokeStyle = '#3b82f6'; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(-w / 2, -d / 2 + a); ctx.lineTo(w / 2 - a, -d / 2 + a); ctx.lineTo(w / 2 - a, d / 2); ctx.stroke();
+    ctx.restore();
+    return;
+  }
+  ctx.fillRect(-w / 2, -d / 2, w, d);
+  ctx.strokeRect(-w / 2, -d / 2, w, d);
+  ctx.lineWidth = 0.8;
+  const doors = kind === 'base' || kind === 'wall' || kind === 'tall' || kind === 'hang' || kind === 'sink' ? Math.max(1, Math.round(catalogWidth / 50)) : 1;
+  if (!wall && (kind === 'base' || kind === 'sink' || kind === 'tall' || kind === 'hang') && doors > 1) {
+    for (let i = 1; i < doors; i++) { ctx.beginPath(); ctx.moveTo(-w / 2 + (w * i) / doors, d * 0.1); ctx.lineTo(-w / 2 + (w * i) / doors, d / 2); ctx.stroke(); }
+  }
+  if (kind === 'hob') {
+    for (const [x, y] of [[-0.22, -0.2], [0.22, -0.2], [-0.22, 0.2], [0.22, 0.2]]) { ctx.beginPath(); ctx.arc(x * w, y * d, Math.min(w, d) * 0.1, 0, Math.PI * 2); ctx.stroke(); }
+  } else if (kind === 'sink') {
+    ctx.strokeRect(-w * 0.32, -d * 0.3, w * 0.5, d * 0.5);
+  } else if (kind === 'shelves' || kind === 'shoes') {
+    for (let i = 1; i < 4; i++) { ctx.beginPath(); ctx.moveTo(-w / 2, -d / 2 + (d * i) / 4); ctx.lineTo(w / 2, -d / 2 + (d * i) / 4); ctx.stroke(); }
+  } else if (kind === 'hood') {
+    ctx.beginPath(); ctx.moveTo(-w / 2, -d / 2); ctx.lineTo(w / 2, d / 2); ctx.moveTo(w / 2, -d / 2); ctx.lineTo(-w / 2, d / 2); ctx.stroke();
+  } else if (kind === 'fridge_tall' || kind === 'tall_oven') {
+    ctx.beginPath(); ctx.moveTo(-w / 2, -d / 2); ctx.lineTo(w / 2, d / 2); ctx.moveTo(w / 2, -d / 2); ctx.lineTo(-w / 2, d / 2); ctx.stroke();
+  }
+  // Front edge (where the doors are)
+  ctx.strokeStyle = '#3b82f6'; ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.moveTo(-w / 2, d / 2); ctx.lineTo(w / 2, d / 2); ctx.stroke();
+  ctx.restore();
 }

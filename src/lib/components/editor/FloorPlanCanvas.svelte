@@ -19,6 +19,7 @@
   import { detectOuterWalls } from '$lib/utils/outerWalls';
   import { getMaterial } from '$lib/utils/materials';
   import { snapFurnitureToWalls } from '$lib/utils/furnitureGeometry';
+  import { isCabinetId, snapToNeighbors } from '$lib/utils/cabinetLayout';
   import { getCatalogItem, getFurnitureSize, type FurnitureDef } from '$lib/utils/furnitureCatalog';
   import { drawFurnitureIcon } from '$lib/utils/furnitureIcons';
   import { handleGlobalShortcut, isEditingField, isControlKey } from '$lib/utils/shortcuts';
@@ -371,7 +372,17 @@
   function snapFurnitureToWall(pos: Point, furniture: FurnitureItem | FurnitureDef): { position: Point; rotation: number; wallId: string; side: 'normal' | 'anti'; wallAngle: number } | null {
     if (!currentFloor || !currentSnapToWalls) return null;
 
-    return snapFurnitureToWalls(pos, furniture, currentFloor.walls, snap);
+    const result = snapFurnitureToWalls(pos, furniture, currentFloor.walls, snap);
+    if (!result) return result;
+    // Kitchen and dressing units also butt against the neighbouring units of their run.
+    const catalogId = 'catalogId' in furniture ? furniture.catalogId : furniture.id;
+    if (!isCabinetId(catalogId)) return result;
+    const selfId = 'catalogId' in furniture ? furniture.id : null;
+    const size = 'catalogId' in furniture ? getFurnitureSize(furniture) : furniture;
+    const neighbors = currentFloor.furniture
+      .filter(f => f.id !== selfId && isCabinetId(f.catalogId))
+      .map(f => ({ position: f.position, rotation: f.rotation, size: getFurnitureSize(f) }));
+    return { ...result, position: snapToNeighbors(result.position, result.rotation, size, neighbors) };
   }
 
   function snap(v: number): number {
