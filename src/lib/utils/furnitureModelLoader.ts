@@ -122,6 +122,7 @@ export function createPlacedFurnitureModel(item: FurnitureItem, onLoaded?: (mode
     depth: item.depth ?? custom?.depth ?? catalog?.depth ?? 50,
     height: item.height ?? custom?.height ?? catalog?.height ?? 50,
     color: item.color ?? catalog?.color ?? '#888888',
+    ...(item.finish ? { finish: item.finish } : {}),
   };
   const model = item.customModelId ? createProjectFurniture(item, definition, project, onLoaded, depth) : createFurnitureModelWithGLB(item.catalogId, definition, onLoaded, {
     color: item.color, material: item.material, depthOffset: depth,

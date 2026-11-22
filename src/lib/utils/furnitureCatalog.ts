@@ -1,4 +1,4 @@
-import type { FurnitureItem } from '$lib/models/types';
+import type { CabinetFinish, FurnitureItem } from '$lib/models/types';
 
 export interface FurnitureDef {
   id: string;
@@ -12,6 +12,8 @@ export interface FurnitureDef {
   height: number;
   /** If set, this is a 2D-only architectural symbol (not rendered in 3D) */
   symbol?: boolean;
+  /** Per-placed-item finishes for kitchen / dressing units. */
+  finish?: CabinetFinish;
 }
 
 // ── Kitchen units and dressing room (data; 3D builder lives in cabinetCatalog.ts) ──

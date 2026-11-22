@@ -21,6 +21,7 @@
   import FurnitureThumbnail from './FurnitureThumbnail.svelte';
   import CustomModelPanel from './CustomModelPanel.svelte';
   import CabinetWizard from './CabinetWizard.svelte';
+  import FinishPanel from './FinishPanel.svelte';
   import { createProjectFromRoomPlan, extractRoomJsonFromZip, importRoomPlanFloors, interchangeStateFromRoomPlan, roomPlanImportOptions, roomPlanStoryIndices, validateRoomPlan, ORTHO_VERSION } from '$lib/utils/roomplanImport';
   import { addRoomPlanFloorToFloor, addRoomPlanFloorsToProject, currentProject, selectImportedElements } from '$lib/stores/project';
   import { orderedFloors } from '$lib/utils/floors';
@@ -661,6 +662,7 @@
         <button class="w-full py-2 rounded-lg bg-amber-500 hover:bg-amber-600 text-white text-xs font-semibold" onclick={() => (showCabinetWizard = true)}>
           🍳 Kitchen / Dressing wizard · معالج المطبخ والدريسنج
         </button>
+        <FinishPanel />
         <CustomModelPanel />
         <!-- Search with clear button and result count -->
         <div class="relative">

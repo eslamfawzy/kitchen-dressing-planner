@@ -106,6 +106,9 @@ export interface Window {
   type: 'standard' | 'fixed' | 'casement' | 'sliding' | 'bay';
 }
 
+/** Kitchen / dressing unit finishes beyond the door colour (see cabinetFinishes.ts). */
+export interface CabinetFinish { top?: string; handle?: string; }
+
 export interface FurnitureItem {
   /** Project-owned model; catalogId remains a portable procedural fallback. */
   customModelId?: string;
@@ -127,6 +130,7 @@ export interface FurnitureItem {
   elevation?: number;
   material?: string; // material name/id
   locked?: boolean;
+  finish?: CabinetFinish;
 }
 
 export interface ElementGroup {

@@ -1,5 +1,7 @@
 import * as THREE from 'three';
 import { DRESSING_CATEGORY, type CabinetDef } from './furnitureCatalog';
+import type { CabinetFinish } from '$lib/models/types';
+import { handleFinish, topFinish } from './cabinetFinishes';
 
 /**
  * Kitchen and dressing-room units: catalog entries plus a parametric 3D builder.
@@ -21,15 +23,19 @@ function box(group: THREE.Group, w: number, h: number, d: number, x: number, y: 
   return mesh;
 }
 
-interface Palette { body: THREE.Material; front: THREE.Material; top: THREE.Material; handle: THREE.Material; plinth: THREE.Material; dark: THREE.Material; }
+interface Palette { noHandles: boolean; body: THREE.Material; front: THREE.Material; top: THREE.Material; handle: THREE.Material; plinth: THREE.Material; dark: THREE.Material; }
 
-function palette(color: string, dressing: boolean): Palette {
+function palette(color: string, dressing: boolean, finish?: CabinetFinish): Palette {
   const base = new THREE.Color(color);
   const body = base.clone().multiplyScalar(0.82);
-  const top = dressing ? base.clone().multiplyScalar(0.95) : new THREE.Color('#6b6b6b');
+  const topDef = topFinish(finish?.top);
+  const top = dressing ? base.clone().multiplyScalar(0.95) : new THREE.Color(topDef.hex || color);
+  const handleDef = handleFinish(finish?.handle);
+  const handleColor = handleDef.hex || color;
   return {
-    body: mat(body, 0.8), front: mat(base, 0.55), top: mat(top, 0.35, 0.1),
-    handle: mat('#3a3a3a', 0.3, 0.8), plinth: mat('#2b2b2b', 0.9), dark: mat('#1a1a1a', 0.4, 0.6),
+    body: mat(body, 0.8), front: mat(base, 0.55), top: dressing ? mat(top, 0.35, 0.1) : mat(top, topDef.roughness, topDef.metalness),
+    handle: mat(handleColor, 0.3, handleDef.id === 'none' ? 0.05 : 0.8), plinth: mat('#2b2b2b', 0.9), dark: mat('#1a1a1a', 0.4, 0.6),
+    noHandles: handleDef.id === 'none',
   };
 }
 
@@ -38,7 +44,7 @@ const GAP = 0.4;
 /** A flat door/drawer front on the +Z face, with a handle. `hx`,`hy` are centre-of-front coordinates. */
 function front(g: THREE.Group, p: Palette, cx: number, y: number, fw: number, fh: number, zFace: number, handle: 'v' | 'h' | 'none' = 'v', handleSide: 'l' | 'r' = 'r'): void {
   box(g, fw - GAP, fh - GAP, 1.8, cx, y + GAP / 2, zFace + 0.9, p.front);
-  if (handle === 'none') return;
+  if (handle === 'none' || p.noHandles) return;
   if (handle === 'h') {
     box(g, Math.min(fw * 0.5, 16), 1.2, 1.6, cx, y + fh - 5, zFace + 2.4, p.handle);
   } else {
@@ -98,10 +104,10 @@ function lShape(g: THREE.Group, p: Palette, w: number, d: number, h: number, arm
   g.add(side);
 }
 
-export function createCabinetModel(def: CabinetDef): THREE.Group {
+export function createCabinetModel(def: CabinetDef & { finish?: CabinetFinish }): THREE.Group {
   const g = new THREE.Group();
   const { width: w, depth: d, height: h } = def;
-  const p = palette(def.color, def.category === DRESSING_CATEGORY);
+  const p = palette(def.color, def.category === DRESSING_CATEGORY, def.finish);
 
   switch (def.kind) {
     case 'base': {

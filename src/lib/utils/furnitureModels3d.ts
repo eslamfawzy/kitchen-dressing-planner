@@ -300,7 +300,7 @@ export function createFurnitureModel(catalogId: string, def: FurnitureDef): THRE
       const cabinet = getCabinetDef(catalogId);
       if (cabinet) {
         // Placed size and colour (def carries overrides) on top of the unit's kind.
-        group.add(createCabinetModel({ ...cabinet, width: w, depth: d, height: h, color }));
+        group.add(createCabinetModel({ ...cabinet, width: w, depth: d, height: h, color, finish: def.finish }));
       } else {
         // Fallback to simple box
         const mesh = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), createMaterial(color));

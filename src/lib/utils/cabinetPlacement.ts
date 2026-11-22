@@ -1,6 +1,8 @@
 import { get } from 'svelte/store';
 import type { Point, Room, Wall } from '$lib/models/types';
 import { activeFloor, addFurniture, addWall, beginUndoGroup, detectedRoomsStore, endUndoGroup, updateFurniture } from '$lib/stores/project';
+import { isCabinetId } from './cabinetLayout';
+import { DEFAULT_HANDLE, DEFAULT_TOP } from './cabinetFinishes';
 import { planLayout, type LayoutOptions, type LayoutPlan } from './cabinetLayout';
 
 const WALL_THICKNESS = 15;
@@ -70,3 +72,27 @@ export function createRoomWalls(width: number, depth: number, centre: Point): Po
   }
   return { x: x0, y: y0 };
 }
+
+export interface FinishChoice { door?: string; top?: string; handle?: string; }
+
+/** Apply finishes to the given units, or to every unit on the floor when `only` is empty. */
+export function applyFinish(choice: FinishChoice, only?: ReadonlySet<string>): number {
+  const floor = get(activeFloor);
+  if (!floor) return 0;
+  const targets = floor.furniture.filter(f => isCabinetId(f.catalogId) && (!only || only.size === 0 || only.has(f.id)));
+  if (!targets.length) return 0;
+  beginUndoGroup();
+  try {
+    for (const f of targets) {
+      const finish = { ...(f.finish ?? {}) };
+      if (choice.top) finish.top = choice.top;
+      if (choice.handle) finish.handle = choice.handle;
+      updateFurniture(f.id, { ...(choice.door ? { color: choice.door } : {}), ...(choice.top || choice.handle ? { finish } : {}) });
+    }
+  } finally {
+    endUndoGroup('Edit');
+  }
+  return targets.length;
+}
+
+export { DEFAULT_HANDLE, DEFAULT_TOP };
